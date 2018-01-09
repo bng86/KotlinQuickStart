@@ -20,11 +20,13 @@ sealed class TodoCategory(val value: String, val display: String) {
     object Family : TodoCategory("family", "家人")
     object Friend : TodoCategory("friend", "朋友")
     object Other : TodoCategory("other", "其他")
+
+    override fun toString(): String = display
 }
 
 @Dao
 abstract class TodoDao {
-    @Query("SELECT * FROM todo")
+    @Query("SELECT * FROM todo ORDER BY created DESC")
     abstract fun findAllTodo(): Flowable<List<Todo>>
 
     @Insert

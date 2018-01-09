@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">KotlinQuickStart</string>
+    <string name="add">新增</string>
+    <string name="hint_todo">想說些什麼呢？</string>
 </resources>
