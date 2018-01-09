@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     private val adapter = TodoAdapter()
     private val database = AppDatabaseImpl.instance()
-    private val categories = arrayListOf(TodoCategory.Family, TodoCategory.Friend, TodoCategory.Other)
+    private val categories = mutableListOf(TodoCategory.Family, TodoCategory.Friend, TodoCategory.Other)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +32,22 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        adapter.onLongClickListener = { onDeleteTodo(it) }
 
         loadTodo()
+    }
+
+    private fun onDeleteTodo(todo: Todo) {
+        AlertDialog.Builder(this)
+                .setTitle("刪除待辦事項，類別 [ ${todo.todoCategory.display} ]")
+                .setMessage(todo.message)
+                .setPositiveButton("新增", { _, _ ->
+                    database.todoDao().deleteTodo(todo)
+                    loadTodo()
+                })
+                .setNegativeButton("取消", { _, _ -> })
+                .create()
+                .show()
     }
 
     private fun loadTodo() {
@@ -60,7 +74,7 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this)
                         .setTitle("建立一則待辦事項")
                         .setView(view)
-                        .setPositiveButton("新增", { _, _ -> insertTodo(editMessage.text.toString(), spinnerCategory.getCategory()) })
+                        .setPositiveButton("刪除", { _, _ -> insertTodo(editMessage.text.toString(), spinnerCategory.getCategory()) })
                         .setNegativeButton("取消", { _, _ -> })
                         .create()
                         .show()
@@ -82,6 +96,7 @@ fun AppCompatSpinner.getCategory(): TodoCategory = this.selectedItem as TodoCate
 class TodoAdapter : RecyclerView.Adapter<TodoViewHolder>() {
 
     private var todos: List<Todo> = emptyList()
+    var onLongClickListener = { _: Todo -> }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_todo, parent, false)
@@ -94,6 +109,11 @@ class TodoAdapter : RecyclerView.Adapter<TodoViewHolder>() {
         holder.run {
             textMessage.text = todo.message
             textCategory.text = todo.todoCategory.display
+        }
+
+        holder.itemView.setOnLongClickListener {
+            onLongClickListener.invoke(todo)
+            true
         }
     }
 
